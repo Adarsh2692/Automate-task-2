@@ -1,9 +1,14 @@
 require("chromedriver");
+require("geckodriver");
 
-const {By, Builder, until} = require("selenium-webdriver");
-let {browserstack_user, browserstack_key} = require("../store")
+let {By, Builder, Key, until, Capability} = require("selenium-webdriver");
+const prompt = require("prompt-sync")({ sigint: true });
 
-var capabilities = {
+let browserstack_user = prompt("Enter username: ");
+let browserstack_key = prompt("Enter access key: ");
+let parallel_status = prompt("Run parallel configurations (yes or no): ");
+
+var capability1 = {
     "os" : "Windows",
     "os_version" : "10",
     "browserName" : "Chrome",
@@ -12,24 +17,51 @@ var capabilities = {
     "name" : "Bstack Demo test",
     "browserstack.local" : "false",
     "browserstack.networkLogs" : "true",
-    "browserstack.selenium_version" : "3.14.0",
-    "browserstack.user" : browserstack_user,
-    "browserstack.key" : browserstack_key
+    "browserstack.selenium_version" : "4.2.2",
 }
+
+const capability2 = [
+    {
+        "os" : "Windows",
+        "os_version" : "10",
+        "browserName" : "Firefox",
+        "browser_version" : "latest",
+        "project" : "Bstack Demo test",
+        "name" : "Bstack Demo test",
+        "browserstack.local" : "false",
+        "browserstack.networkLogs" : "true",
+    },
+    {
+        "os" : "Windows",
+        "os_version" : "10",
+        "browserName" : "Chrome",
+        "browser_version" : "latest",
+        "project" : "Bstack Demo test",
+        "name" : "Bstack Demo test",
+        "browserstack.local" : "false",
+        "browserstack.networkLogs" : "true",
+        "browserstack.selenium_version" : "4.2.2",
+    }
+]
   
 
-async function test() {
-    // const driver = new Builder().forBrowser('chrome').build();
-    let driver = new Builder().usingServer(`https://${browserstack_user}:${browserstack_key}@hub.browserstack.com/wd/hub`).withCapabilities(capability).build();
+async function test(capability) {
+    let driver = new Builder()
+                     .usingServer(`https://${browserstack_user}:${browserstack_key}@hub.browserstack.com/wd/hub`)
+                     .withCapabilities(capability)
+                     .build();
 
     try {
         await driver.get("https://www.amazon.com/");
 
-        await driver.findElement(By.xpath("//input[@id='twotabsearchtextbox']")).sendKeys("iPhone X\n");
+        await driver.findElement(By.xpath("//input[@id='twotabsearchtextbox']")).sendKeys("iPhone X");
+
+        await driver.findElement(By.id("nav-search-submit-button")).click();
         
-        await driver.findElement({id : "a-autoid-0"}).click();
+        await driver.findElement(By.xpath('//*[@id="search"]/span/div/h1/div/div[2]/div/div/form/span')).click();
         
         await driver.findElement({id : "s-result-sort-select_1"}).click();
+
 
         await driver.wait(until.elementLocated(By.id("p_n_feature_twenty_browse-bin/17881878011")));
 
@@ -72,4 +104,10 @@ async function test() {
     }, 3000);
 }
 
-test();
+if (parallel_status === "no")
+    test(capability1);
+else {
+    capability2.map((capability) => {
+        test(capability)
+    })
+}
