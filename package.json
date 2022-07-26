@@ -11,6 +11,8 @@
   "license": "ISC",
   "dependencies": {
     "chromedriver": "^103.0.0",
+    "geckodriver": "^3.0.2",
+    "prompt-sync": "^4.2.0",
     "selenium-webdriver": "^4.3.0"
   }
 }
